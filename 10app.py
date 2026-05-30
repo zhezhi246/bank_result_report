@@ -24,10 +24,10 @@ xgb_model, kmeans, scaler, country_dict = load_assets()
 
 # 定义客群业务标签 (你可以根据之前算出的聚类均值修改这些名字)
 CLUSTER_LABELS = {
-    0: "优质活跃主力军 (High-Value Active)",
-    1: "沉睡的高净值客群 (Wealthy Sleeping Dog)",
-    2: "低频单产品青年 (Low-Balance Youth)",
-    3: "高危敏感型客户 (High-Risk Sensitive)"
+    0: "稳健老年核心客群 ",
+    1: "高活跃青年富裕客群 ",
+    2: "低余额多产品普通客群 ",
+    3: "沉睡高净值客群 "
 }
 
 # ==========================================

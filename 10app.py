@@ -3,23 +3,26 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 import joblib
+import os
 
 # ==========================================
 # 0. 页面配置与缓存模型加载
 # ==========================================
 st.set_page_config(page_title="银行客户智能预警系统", page_icon="🏦", layout="wide")
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 @st.cache_resource
 def load_assets():
     xgb_model = xgb.XGBClassifier()
-    xgb_model.load_model(r'\xgboost_churn_model.json')
-    kmeans = joblib.load(r'\kmeans_model.pkl')
-    scaler = joblib.load(r'\scaler.pkl')
-    country_dict = joblib.load(r'\country_mean_dict.pkl')
-    scaler_bal = joblib.load(r'\scaler_bal.pkl')
-    scaler_sal = joblib.load(r'\scaler_sal.pkl')
-    vi_params = joblib.load(r'\vi_params.pkl')
+    xgb_model.load_model(os.path.join(BASE_DIR, 'xgboost_churn_model.json'))
+    kmeans = joblib.load(os.path.join(BASE_DIR, 'kmeans_model.pkl'))
+    scaler = joblib.load(os.path.join(BASE_DIR, 'scaler.pkl'))
+    country_dict = joblib.load(os.path.join(BASE_DIR, 'country_mean_dict.pkl'))
+    scaler_bal = joblib.load(os.path.join(BASE_DIR, 'scaler_bal.pkl'))
+    scaler_sal = joblib.load(os.path.join(BASE_DIR, 'scaler_sal.pkl'))
+    vi_params = joblib.load(os.path.join(BASE_DIR, 'vi_params.pkl'))
     return xgb_model, kmeans, scaler, country_dict, scaler_bal, scaler_sal, vi_params
 
 

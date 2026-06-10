@@ -13,13 +13,13 @@ st.set_page_config(page_title="银行客户智能预警系统", page_icon="🏦"
 @st.cache_resource
 def load_assets():
     xgb_model = xgb.XGBClassifier()
-    xgb_model.load_model(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\xgboost_churn_model.json')
-    kmeans = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\kmeans_model.pkl')
-    scaler = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\scaler.pkl')
-    country_dict = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\country_mean_dict.pkl')
-    scaler_bal = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\scaler_bal.pkl')
-    scaler_sal = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\scaler_sal.pkl')
-    vi_params = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\vi_params.pkl')
+    xgb_model.load_model(r'\xgboost_churn_model.json')
+    kmeans = joblib.load(r'\kmeans_model.pkl')
+    scaler = joblib.load(r'\scaler.pkl')
+    country_dict = joblib.load(r'\country_mean_dict.pkl')
+    scaler_bal = joblib.load(r'\scaler_bal.pkl')
+    scaler_sal = joblib.load(r'\scaler_sal.pkl')
+    vi_params = joblib.load(r'\vi_params.pkl')
     return xgb_model, kmeans, scaler, country_dict, scaler_bal, scaler_sal, vi_params
 
 

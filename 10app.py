@@ -142,7 +142,7 @@ st.subheader("💡 AI 智能营销策略建议")
 if churn_prob > theta:
     if "高净值" in persona or balance > 100000:
         st.error("🎯 **VIP 挽回策略 (高风险 + 高价值):**\n\n"
-                 f"该客户价值评分 Vi={Vi:.1f}，属于核心资产人群。"
+                 f"该客户价值评分属于核心资产人群。"
                  "建议指派专属客户经理进行 1V1 电话回访，提供高收益理财产品体验券，增加退出壁垒。")
     elif "单产品" in persona or num_products == 1:
         st.warning("🎯 **交叉营销策略 (高风险 + 单一产品):**\n\n"

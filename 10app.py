@@ -13,21 +13,26 @@ st.set_page_config(page_title="银行客户智能预警系统", page_icon="🏦"
 @st.cache_resource
 def load_assets():
     xgb_model = xgb.XGBClassifier()
-    xgb_model.load_model(r'xgboost_churn_model.json')
-    kmeans = joblib.load(r'kmeans_model.pkl')
-    scaler = joblib.load(r'scaler.pkl')
-    country_dict = joblib.load(r'country_mean_dict.pkl')
-    return xgb_model, kmeans, scaler, country_dict
+    xgb_model.load_model(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\xgboost_churn_model.json')
+    kmeans = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\kmeans_model.pkl')
+    scaler = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\scaler.pkl')
+    country_dict = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\country_mean_dict.pkl')
+    scaler_bal = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\scaler_bal.pkl')
+    scaler_sal = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\scaler_sal.pkl')
+    vi_params = joblib.load(r'C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\vi_params.pkl')
+    return xgb_model, kmeans, scaler, country_dict, scaler_bal, scaler_sal, vi_params
 
 
-xgb_model, kmeans, scaler, country_dict = load_assets()
+xgb_model, kmeans, scaler, country_dict, scaler_bal, scaler_sal, vi_params = load_assets()
 
-# 定义客群业务标签 (你可以根据之前算出的聚类均值修改这些名字)
+C_COST = vi_params['C_COST']
+GAMMA = vi_params['GAMMA']
+
 CLUSTER_LABELS = {
-    0: "稳健老年核心客群 ",
-    1: "高活跃青年富裕客群 ",
-    2: "低余额多产品普通客群 ",
-    3: "沉睡高净值客群 "
+    0: "优质活跃主力军 (High-Value Active)",
+    1: "沉睡的高净值客群 (Wealthy Sleeping Dog)",
+    2: "低频单产品青年 (Low-Balance Youth)",
+    3: "高危敏感型客户 (High-Risk Sensitive)"
 }
 
 # ==========================================
@@ -47,7 +52,6 @@ num_products = st.sidebar.slider("持有产品数 (Num Of Products)", 1, 4, 1)
 has_crcard = st.sidebar.checkbox("拥有信用卡 (Has Credit Card)", value=True)
 is_active = st.sidebar.checkbox("活跃会员 (Is Active Member)", value=True)
 
-# 转换输入格式
 gender_val = 1 if gender == 'Male' else 0
 card_val = 1 if has_crcard else 0
 active_val = 1 if is_active else 0
@@ -55,10 +59,10 @@ active_val = 1 if is_active else 0
 # ==========================================
 # 2. 后台推理计算
 # ==========================================
-# 计算群体统计特征 (Group_Stat)
+# 2a. 群体统计特征
 group_stat = balance - country_dict.get(country, 0)
 
-# 构建 XGBoost 输入
+# 2b. XGBoost 输入
 xgb_features = pd.DataFrame({
     'CreditScore': [credit_score],
     'Gender': [gender_val],
@@ -72,7 +76,14 @@ xgb_features = pd.DataFrame({
     'Group_Stat': [group_stat]
 })
 
-# 构建 KMeans 输入
+# 2c. 客户价值代理指标 Vi 与个性化阈值
+bal_norm = scaler_bal.transform([[balance]])[0][0]
+sal_norm = scaler_sal.transform([[salary]])[0][0]
+vi_raw = 0.6 * bal_norm + 0.4 * sal_norm * (1 + 0.2 * active_val)
+Vi = 1.0 + 9.0 * (vi_raw - vi_params['vi_raw_min']) / (vi_params['vi_raw_max'] - vi_params['vi_raw_min'] + 1e-5)
+theta = np.clip(C_COST / (GAMMA * Vi), 0.01, 0.99)
+
+# 2d. KMeans 输入
 cluster_features = pd.DataFrame({
     'CreditScore': [credit_score],
     'Age': [age],
@@ -83,7 +94,7 @@ cluster_features = pd.DataFrame({
     'IsActiveMember': [active_val]
 })
 
-# 进行预测
+# 2e. 预测
 churn_prob = xgb_model.predict_proba(xgb_features)[0][1]
 scaled_features = scaler.transform(cluster_features)
 cluster_id = kmeans.predict(scaled_features)[0]
@@ -92,50 +103,54 @@ persona = CLUSTER_LABELS[cluster_id]
 # ==========================================
 # 3. 主界面 UI 展示
 # ==========================================
-st.title("🏦 银行客户流失预警与策略系统")
+st.title("🏦 银行客户流失预警与策略系统（CLV 动态阈值）")
 st.markdown("---")
 
 col1, col2 = st.columns(2)
 
-# 面板 1：预测结果
 with col1:
     st.subheader("📊 流失风险评估")
     st.metric(label="流失概率 (Churn Probability)", value=f"{churn_prob * 100:.2f}%")
 
-    if churn_prob > 0.6:
-        st.error("🚨 高危预警：该客户流失风险极高，需立即干预！")
-    elif churn_prob > 0.4:
-        st.warning("⚠️ 中度风险：建议关注该客户近期动向。")
+    # 基于个性化动态阈值的风险判定
+    if churn_prob > theta:
+        st.error(f"🚨 高危预警：流失概率超过个性化阈值 ({theta*100:.1f}%)，建议立即干预！")
+    elif churn_prob > theta * 0.7:
+        st.warning(f"⚠️ 中度风险：流失概率接近个性化阈值 ({theta*100:.1f}%)，建议关注。")
     else:
-        st.success("✅ 安全状态：客户留存意愿良好。")
+        st.success(f"✅ 安全状态：流失概率远低于个性化阈值 ({theta*100:.1f}%)，客户留存意愿良好。")
 
     st.progress(float(churn_prob))
 
-# 面板 2：客户画像
 with col2:
     st.subheader("🪞 客户画像分群")
     st.info(f"**归属客群：** \n### {persona}")
 
-    # 根据客群给出不同的话术展示
     st.markdown("**数据指标：**")
+    st.write(f"- 客户价值代理指标 (Vi): **{Vi:.2f}** / 10.0")
+    st.write(f"- 个性化预警阈值: **{theta*100:.1f}%**")
     st.write(f"- 与所在国平均余额差值 (Group_Stat): **€ {group_stat:,.2f}**")
     st.write(f"- 活跃状态: {'活跃' if is_active else '沉睡'}")
-    st.write(f"- 资产负债情况: {num_products} 款产品")
 
 st.markdown("---")
 
-# 面板 3：智能业务策略 (流失率 + 画像的联立闭环)
 st.subheader("💡 AI 智能营销策略建议")
 
-if churn_prob > 0.5:
+if churn_prob > theta:
     if "高净值" in persona or balance > 100000:
-        st.error("🎯 **VIP 挽回策略 (高风险 + 高价值):**\n系统识别该客户为核心资产人群。建议指派专属客户经理进行 1V1 电话回访，提供高收益理财产品体验券，增加退出壁垒。")
+        st.error("🎯 **VIP 挽回策略 (高风险 + 高价值):**\n\n"
+                 f"该客户价值评分 Vi={Vi:.1f}，属于核心资产人群。"
+                 "建议指派专属客户经理进行 1V1 电话回访，提供高收益理财产品体验券，增加退出壁垒。")
     elif "单产品" in persona or num_products == 1:
-        st.warning("🎯 **交叉营销策略 (高风险 + 单一产品):**\n流失原因大概率是产品粘性不足。建议立即推送包含‘信用卡免年费+小额消费贷’的组合产品短信，不要过度打扰。")
+        st.warning("🎯 **交叉营销策略 (高风险 + 单一产品):**\n\n"
+                   "流失原因大概率是产品粘性不足。建议立即推送包含'信用卡免年费+小额消费贷'的组合产品短信，不要过度打扰。")
     else:
-        st.warning("🎯 **标准化挽留策略:**\n向该客户邮箱发送自动化温情关怀邮件，附带常规积分兑换活动。")
+        st.warning("🎯 **标准化挽留策略:**\n\n"
+                   "向该客户邮箱发送自动化温情关怀邮件，附带常规积分兑换活动。")
 else:
     if "沉睡" in persona:
-        st.info("🛡️ **唤醒策略 (安全 + 沉睡):**\n客户暂无流失风险，但活跃度低。建议在节假日推送 App 登录抽奖活动，提升促活。")
+        st.info("🛡️ **唤醒策略 (安全 + 沉睡):**\n\n"
+                "客户暂无流失风险，但活跃度低。建议在节假日推送 App 登录抽奖活动，提升促活。")
     else:
-        st.success("🛡️ **维护策略 (安全 + 活跃):**\n客户忠诚度高，是银行的利润基石。适宜进行深度交叉销售（如推销高净值保险或基金）。")
+        st.success("🛡️ **维护策略 (安全 + 活跃):**\n\n"
+                   "客户忠诚度高，是银行的利润基石。适宜进行深度交叉销售（如推销高净值保险或基金）。")

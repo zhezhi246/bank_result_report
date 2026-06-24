@@ -10,7 +10,7 @@ C_COST = 0.1
 GAMMA = 0.3
 
 # 1. 加载数据
-input_file = r"C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\Data Cleaning\Cleaned_Churn_Modelling.csv"
+input_file = r"C:\Users\折纸\Desktop\研究生\研一下\机器学习\Data Cleaning\Cleaned_Churn_Modelling.csv"
 df = pd.read_csv(input_file)
 
 def get_country(row):

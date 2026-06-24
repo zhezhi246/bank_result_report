@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
 import xgboost as xgb
 from sklearn.metrics import recall_score, f1_score, roc_auc_score, confusion_matrix
 
@@ -22,7 +21,7 @@ plt.rcParams['axes.unicode_minus'] = False
 plt.rcParams['figure.dpi'] = 300
 
 # 确保路径正确
-input_file = r"C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\Data Cleaning\Cleaned_Churn_Modelling.csv"
+input_file = r"C:\Users\折纸\Desktop\研究生\研一下\机器学习\Data Cleaning\Cleaned_Churn_Modelling.csv"
 project_root = os.path.dirname(os.path.dirname(input_file))
 output_dir = os.path.join(project_root, "Tree_Ablation_Study")
 
@@ -104,7 +103,6 @@ for scenario in scenarios:
     X_train_proc, X_test_proc = apply_feature_engineering(X_train, X_test, scenario)
 
     models = {
-        "Decision Tree": DecisionTreeClassifier(class_weight='balanced', max_depth=6, random_state=42),
         "XGBoost": xgb.XGBClassifier(scale_pos_weight=pos_weight, random_state=42, eval_metric='logloss')
     }
 
@@ -156,18 +154,13 @@ plt.close()
 # 4. 绘图：集成混淆矩阵对比 (2x3 面板)
 # ==========================================
 print("[可视化] 正在生成 集成混淆矩阵面板 (Baseline -> Group_Stat -> All)...")
-fig, axes = plt.subplots(2, 3, figsize=(20, 12))
+fig, axes = plt.subplots(1, 3, figsize=(20, 6))
 
 # 定义绘图矩阵：(数据Key, 坐标轴位置, 图表标题)
 plot_keys_all = [
-    # 第一行：决策树
-    ("Decision Tree_Baseline", axes[0, 0], "DT: Baseline"),
-    ("Decision Tree_Group_Stat", axes[0, 1], "DT: Group_Stat Only"),
-    ("Decision Tree_All", axes[0, 2], "DT: All Features"),
-    # 第二行：XGBoost
-    ("XGBoost_Baseline", axes[1, 0], "XGB: Baseline"),
-    ("XGBoost_Group_Stat", axes[1, 1], "XGB: Group_Stat Only"),
-    ("XGBoost_All", axes[1, 2], "XGB: All Features")
+    ("XGBoost_Baseline", axes[0], "XGB: Baseline"),
+    ("XGBoost_Group_Stat", axes[1], "XGB: Group_Stat Only"),
+    ("XGBoost_All", axes[2], "XGB: All Features")
 ]
 
 for key, ax, title in plot_keys_all:

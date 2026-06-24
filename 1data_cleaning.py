@@ -33,7 +33,7 @@ plt.rcParams['figure.dpi'] = 300  # 设置高分辨率以适应报告排版
 # ==========================================
 # 1. 数据加载与无关特征剔除
 # ==========================================
-file_path = "C:/Users/折纸/Desktop/研究生/研一下/数据挖掘/数据挖掘作业二—新/Churn_Modelling.csv"  # 请确保该文件与脚本在同一目录下
+file_path = "C:\Users\折纸\Desktop\研究生\研一下\机器学习\Data Cleaning\Cleaned_Churn_Modelling.csv"  # 请确保该文件与脚本在同一目录下
 print(f"[数据加载] 正在读取文件：{file_path}")
 df = pd.read_csv(file_path)
 print(f"[数据审视] 原始数据集维度为：{df.shape[0]} 行, {df.shape[1]} 列。")

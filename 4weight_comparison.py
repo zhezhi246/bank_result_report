@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
 import xgboost as xgb
 from sklearn.metrics import confusion_matrix, classification_report, f1_score, recall_score, precision_score
 sns.set_theme(style="whitegrid", palette="muted")
@@ -20,7 +19,7 @@ plt.rcParams['axes.unicode_minus'] = False
 # ==========================================
 plt.rcParams['figure.dpi'] = 300
 
-input_file = r"C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\Data Cleaning\Cleaned_Churn_Modelling.csv"
+input_file = r"C:\Users\折纸\Desktop\研究生\研一下\机器学习\Data Cleaning\Cleaned_Churn_Modelling.csv"
 project_root = os.path.dirname(os.path.dirname(input_file))
 output_dir = os.path.join(project_root, "Model_Evaluation")
 
@@ -39,11 +38,9 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 pos_weight = (len(y_train) - sum(y_train)) / sum(y_train)
 
 # ==========================================
-# 1. 定义四组对比模型
+# 1. 定义两组对比模型：XGBoost 无权重 vs 有权重
 # ==========================================
 models = {
-    "RF (Unweighted)": RandomForestClassifier(random_state=42, n_estimators=100, max_depth=8),
-    "RF (Weighted)": RandomForestClassifier(class_weight='balanced', random_state=42, n_estimators=100, max_depth=8),
     "XGBoost (Unweighted)": xgb.XGBClassifier(random_state=42, eval_metric='logloss'),
     "XGBoost (Weighted)": xgb.XGBClassifier(scale_pos_weight=pos_weight, random_state=42, eval_metric='logloss')
 }
@@ -87,7 +84,7 @@ df_melted = df_results.melt(id_vars='Model', var_name='Metric', value_name='Scor
 
 plt.figure(figsize=(10, 6))
 sns.barplot(data=df_melted, x='Model', y='Score', hue='Metric', palette='viridis')
-plt.title("Impact of Class Weights on Model Performance (Focus on Exited=1)", fontsize=14)
+plt.title("XGBoost: Impact of scale_pos_weight on Performance (Focus on Exited=1)", fontsize=14)
 plt.ylabel("Score", fontsize=12)
 plt.ylim(0, 1.0)
 plt.xticks(rotation=15)
@@ -103,8 +100,8 @@ plt.tight_layout()
 plt.savefig(os.path.join(output_dir, "04_Weight_Adjustment_Comparison_Bar.png"))
 plt.close()
 
-# 3.2 绘制 2x2 混淆矩阵直观对比
-fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+# 3.2 绘制 1x2 混淆矩阵直观对比
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 axes = axes.flatten()
 
 for idx, (name, cm) in enumerate(cms.items()):
@@ -117,7 +114,7 @@ for idx, (name, cm) in enumerate(cms.items()):
     axes[idx].set_yticklabels(['Retained(0)', 'Exited(1)'])
 
 plt.tight_layout()
-plt.suptitle("Confusion Matrix: Unweighted vs Weighted", fontsize=16, y=1.02)
+plt.suptitle("Confusion Matrix: XGBoost Unweighted vs Weighted", fontsize=16, y=1.02)
 plt.savefig(os.path.join(output_dir, "05_Weight_Adjustment_Confusion_Matrix.png"))
 plt.close()
 

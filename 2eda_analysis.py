@@ -16,7 +16,7 @@ sns.set_theme(style="whitegrid")
 plt.rcParams['figure.dpi'] = 300
 
 # 定义输入文件路径
-input_file = r"C:\Users\折纸\Desktop\研究生\研一下\数据挖掘\数据挖掘作业二—新\Data Cleaning\Cleaned_Churn_Modelling.csv"
+input_file = r"C:\Users\折纸\Desktop\研究生\研一下\机器学习\Data Cleaning\Cleaned_Churn_Modelling.csv"
 print(f"[数据加载] 正在读取清洗后的数据文件：\n{input_file}")
 
 try:
